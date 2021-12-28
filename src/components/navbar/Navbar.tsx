@@ -21,7 +21,6 @@ function Navbar() {
 
   useEffect(() => {
     setAudioUrl(defaultUrl);
-    // onPlay();
   }, []);
 
   return (
