@@ -1,13 +1,27 @@
+import { useRef, useState } from 'react';
+
 import useBoolean from 'lib/hooks/useBoolean';
 import useInterval from 'lib/hooks/useInterval';
-import { useRef, useState } from 'react';
 
 export default function useAudio(url?: string) {
   const audioRef = useRef(url !== undefined ? new Audio(url) : null);
   const [isPlaying, , setTrueIsPlaying, setFalseIsPlaying] = useBoolean();
+  const [
+    isPlayingBeforeSwipe,
+    ,
+    setTrueIsPlayingBeforeSwipe,
+    setFalseIsPlayingBeforeSwipe,
+  ] = useBoolean();
 
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  const onChangeProgress = (value: number) => {
+    setProgress(value);
+    if (audioRef.current !== null) {
+      audioRef.current.currentTime = value;
+    }
+  };
 
   const setAudioUrl = (url: string) => {
     audioRef.current = new Audio(url);
@@ -45,20 +59,23 @@ export default function useAudio(url?: string) {
       if (audioRef.current.ended) {
         onPause();
       } else {
-        console.log(audioRef.current.currentTime);
         setProgress(audioRef.current.currentTime);
       }
     },
-    isPlaying ? 500 : null,
+    isPlaying ? 1000 : null,
   );
 
   return {
     audioRef,
     isPlaying,
+    isPlayingBeforeSwipe,
+    setTrueIsPlayingBeforeSwipe,
+    setFalseIsPlayingBeforeSwipe,
     onPlay,
     onPause,
     setAudioUrl,
     progress,
+    onChangeProgress,
     duration,
   };
 }

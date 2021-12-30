@@ -18,8 +18,16 @@ const Container = styled.nav`
 `;
 
 function Navbar() {
-  const { audioRef, onPlay, onPause, setAudioUrl, progress, duration } =
-    useAudio();
+  const {
+    isPlaying,
+    audioRef,
+    onPlay,
+    onPause,
+    setAudioUrl,
+    progress,
+    onChangeProgress,
+    duration,
+  } = useAudio();
   const defaultUrl = 'http://127.0.0.1:8887/test.mp3';
 
   useEffect(() => {
@@ -28,7 +36,14 @@ function Navbar() {
 
   return (
     <Container>
-      <PlayerProgress duration={duration} progress={progress} />
+      <PlayerProgress
+        isPlaying={isPlaying}
+        duration={duration}
+        progress={progress}
+        onChangeProgress={onChangeProgress}
+        onPlay={onPlay}
+        onPause={onPause}
+      />
       <br />
       <audio ref={audioRef} />
       <button onClick={onPlay}>play</button>
