@@ -5,6 +5,7 @@ import useAudio from './hooks/useAudio';
 import useFetchAudio from './hooks/useFetchAudio';
 
 import PlayerProgress from './PlayerProgress';
+import VolumeProgress from './VolumeProgress';
 
 const Container = styled.nav`
   position: fixed;
@@ -21,6 +22,8 @@ const Container = styled.nav`
 function Navbar() {
   const [playList] = useFetchAudio();
   const {
+    volume,
+    onChangeVolume,
     selectedMusic,
     isPlaying,
     audioRef,
@@ -87,6 +90,7 @@ function Navbar() {
         onPause={onPause}
       />
       <br />
+      <VolumeProgress volume={volume} onChangeVolume={onChangeVolume} />
       <audio ref={audioRef} />
       <button onClick={onPlay}>play</button>
       <button onClick={onPause}>pause</button>

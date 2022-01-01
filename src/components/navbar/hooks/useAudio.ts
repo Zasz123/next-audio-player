@@ -5,19 +5,29 @@ import useInterval from 'lib/hooks/useInterval';
 
 export default function useAudio(url?: string) {
   const audioRef = useRef(url !== undefined ? new Audio(url) : null);
-  const [isPlaying, , setTrueIsPlaying, setFalseIsPlaying] = useBoolean();
 
+  const [isPlaying, , setTrueIsPlaying, setFalseIsPlaying] = useBoolean();
   const [selectedMusic, setSelectedMusic] = useState(url ?? '');
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(10);
 
   const onChangeProgress = (value: number) => {
-    if (audioRef.current === null) {
+    if (audioRef.current === null || value > duration) {
       return;
     }
 
     setProgress(value);
     audioRef.current.currentTime = value;
+  };
+
+  const onChangeVolume = (value: number) => {
+    if (audioRef.current === null) {
+      return;
+    }
+
+    setVolume(value);
+    audioRef.current.volume = value / 100;
   };
 
   const onChangeSelectedMusic = (url: string) => {
@@ -75,5 +85,7 @@ export default function useAudio(url?: string) {
     progress,
     onChangeProgress,
     duration,
+    volume,
+    onChangeVolume,
   };
 }
