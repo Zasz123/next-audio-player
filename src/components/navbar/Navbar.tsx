@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import styled from 'styled-components';
 
 import useAudio from './hooks/useAudio';
+import useFetchAudio from './hooks/useFetchAudio';
 
 import PlayerProgress from './PlayerProgress';
 
@@ -18,21 +19,62 @@ const Container = styled.nav`
 `;
 
 function Navbar() {
+  const [playList] = useFetchAudio();
   const {
+    selectedMusic,
     isPlaying,
     audioRef,
     onPlay,
     onPause,
-    setAudioUrl,
+    onChangeSelectedMusic,
     progress,
     onChangeProgress,
     duration,
   } = useAudio();
-  const defaultUrl = 'http://127.0.0.1:8887/test.mp3';
 
+  const onChangeSelectedMusicToPrevious = () => {
+    const newMusicIndex = playList.findIndex((item) => item === selectedMusic);
+
+    if (newMusicIndex - 1 === -1) {
+      return;
+    }
+
+    const isPlayingBeforeChange = isPlaying;
+
+    onPause();
+    onChangeProgress(0);
+    onChangeSelectedMusic(playList[newMusicIndex - 1]);
+
+    if (isPlayingBeforeChange) {
+      onPlay();
+    }
+  };
+
+  const onChangeSelectedMusicToNext = () => {
+    const newMusicIndex = playList.findIndex((item) => item === selectedMusic);
+
+    if (newMusicIndex + 1 === playList.length) {
+      return;
+    }
+
+    const isPlayingBeforeChange = isPlaying;
+
+    onPause();
+    onChangeProgress(0);
+    onChangeSelectedMusic(playList[newMusicIndex + 1]);
+
+    if (isPlayingBeforeChange) {
+      onPlay();
+    }
+  };
+
+  // TODO: 현재는 테스트를 위해 play list 변화시마다 입력중
+  // 나중에 곡 선택하면 onChangeSelectedMusic 호출되도록 수정
   useEffect(() => {
-    setAudioUrl(defaultUrl);
-  }, []);
+    if (playList.length > 0) {
+      onChangeSelectedMusic(playList[0]);
+    }
+  }, [playList]);
 
   return (
     <Container>
@@ -48,8 +90,8 @@ function Navbar() {
       <audio ref={audioRef} />
       <button onClick={onPlay}>play</button>
       <button onClick={onPause}>pause</button>
-      <button onClick={onPause}>previous</button>
-      <button onClick={onPause}>next</button>
+      <button onClick={onChangeSelectedMusicToPrevious}>previous</button>
+      <button onClick={onChangeSelectedMusicToNext}>next</button>
     </Container>
   );
 }
