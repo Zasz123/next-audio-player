@@ -1,21 +1,17 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import useBoolean from 'lib/hooks/useBoolean';
 import useInterval from 'lib/hooks/useInterval';
 
 import { IMusic } from 'interfaces/music';
 
-export default function useAudio(initialMusic?: IMusic) {
-  const audioRef = useRef(
-    initialMusic !== undefined ? new Audio(initialMusic.url) : null,
-  );
+export default function useAudio(playList: Array<IMusic>) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [isPlaying, , setTrueIsPlaying, setFalseIsPlaying] = useBoolean();
   const [isPlayingBeforeSwipe, onChangeIsPlayingBeforeSwipe] =
     useBoolean(isPlaying);
-  const [selectedMusic, setSelectedMusic] = useState<IMusic | null>(
-    initialMusic || null,
-  );
+  const [selectedMusic, setSelectedMusic] = useState<IMusic | null>(null);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(10);
@@ -68,6 +64,54 @@ export default function useAudio(initialMusic?: IMusic) {
     audioRef.current.pause();
   };
 
+  const onChangeSelectedMusicToPrevious = () => {
+    const newMusicIndex = playList.findIndex(
+      (item) => item.id === selectedMusic?.id,
+    );
+
+    if (newMusicIndex - 1 === -1) {
+      return;
+    }
+
+    const isPlayingBeforeChange = isPlaying;
+
+    onPause();
+    onChangeProgress(0);
+    onChangeSelectedMusic(playList[newMusicIndex - 1]);
+
+    if (isPlayingBeforeChange) {
+      onPlay();
+    }
+  };
+
+  const onChangeSelectedMusicToNext = () => {
+    const newMusicIndex = playList.findIndex(
+      (item) => item.id === selectedMusic?.id,
+    );
+
+    if (newMusicIndex + 1 === playList.length) {
+      return;
+    }
+
+    const isPlayingBeforeChange = isPlaying;
+
+    onPause();
+    onChangeProgress(0);
+    onChangeSelectedMusic(playList[newMusicIndex + 1]);
+
+    if (isPlayingBeforeChange) {
+      onPlay();
+    }
+  };
+
+  // TODO: 현재는 테스트를 위해 play list 변화시마다 입력중
+  // 나중에 곡 선택하면 onChangeSelectedMusic 호출되도록 수정
+  useEffect(() => {
+    if (playList.length > 0) {
+      onChangeSelectedMusic(playList[0]);
+    }
+  }, [playList]);
+
   // 재생 바를 위한 interval hooks
   useInterval(
     () => {
@@ -98,5 +142,7 @@ export default function useAudio(initialMusic?: IMusic) {
     onChangeVolume,
     isPlayingBeforeSwipe,
     onChangeIsPlayingBeforeSwipe,
+    onChangeSelectedMusicToPrevious,
+    onChangeSelectedMusicToNext,
   };
 }

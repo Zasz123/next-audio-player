@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import styled from 'styled-components';
 
 import useAudio from './hooks/useAudio';
@@ -23,66 +22,18 @@ function Navbar() {
   const {
     volume,
     onChangeVolume,
-    selectedMusic,
     isPlaying,
     audioRef,
     onPlay,
     onPause,
-    onChangeSelectedMusic,
     progress,
     onChangeProgress,
     duration,
     isPlayingBeforeSwipe,
     onChangeIsPlayingBeforeSwipe,
-  } = useAudio();
-
-  const onChangeSelectedMusicToPrevious = () => {
-    const newMusicIndex = playList.findIndex(
-      (item) => item.id === selectedMusic?.id,
-    );
-
-    if (newMusicIndex - 1 === -1) {
-      return;
-    }
-
-    const isPlayingBeforeChange = isPlaying;
-
-    onPause();
-    onChangeProgress(0);
-    onChangeSelectedMusic(playList[newMusicIndex - 1]);
-
-    if (isPlayingBeforeChange) {
-      onPlay();
-    }
-  };
-
-  const onChangeSelectedMusicToNext = () => {
-    const newMusicIndex = playList.findIndex(
-      (item) => item.id === selectedMusic?.id,
-    );
-
-    if (newMusicIndex + 1 === playList.length) {
-      return;
-    }
-
-    const isPlayingBeforeChange = isPlaying;
-
-    onPause();
-    onChangeProgress(0);
-    onChangeSelectedMusic(playList[newMusicIndex + 1]);
-
-    if (isPlayingBeforeChange) {
-      onPlay();
-    }
-  };
-
-  // TODO: 현재는 테스트를 위해 play list 변화시마다 입력중
-  // 나중에 곡 선택하면 onChangeSelectedMusic 호출되도록 수정
-  useEffect(() => {
-    if (playList.length > 0) {
-      onChangeSelectedMusic(playList[0]);
-    }
-  }, [playList]);
+    onChangeSelectedMusicToNext,
+    onChangeSelectedMusicToPrevious,
+  } = useAudio(playList);
 
   return (
     <Container>
