@@ -3,11 +3,19 @@ import { useRef, useState } from 'react';
 import useBoolean from 'lib/hooks/useBoolean';
 import useInterval from 'lib/hooks/useInterval';
 
-export default function useAudio(url?: string) {
-  const audioRef = useRef(url !== undefined ? new Audio(url) : null);
+import { IMusic } from 'interfaces/music';
+
+export default function useAudio(initialMusic?: IMusic) {
+  const audioRef = useRef(
+    initialMusic !== undefined ? new Audio(initialMusic.url) : null,
+  );
 
   const [isPlaying, , setTrueIsPlaying, setFalseIsPlaying] = useBoolean();
-  const [selectedMusic, setSelectedMusic] = useState(url ?? '');
+  const [isPlayingBeforeSwipe, onChangeIsPlayingBeforeSwipe] =
+    useBoolean(isPlaying);
+  const [selectedMusic, setSelectedMusic] = useState<IMusic | null>(
+    initialMusic || null,
+  );
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(10);
@@ -30,13 +38,14 @@ export default function useAudio(url?: string) {
     audioRef.current.volume = value / 100;
   };
 
-  const onChangeSelectedMusic = (url: string) => {
-    setSelectedMusic(url);
-    audioRef.current = new Audio(url);
+  const onChangeSelectedMusic = (newMusic: IMusic) => {
+    setSelectedMusic(newMusic);
+    audioRef.current = new Audio(newMusic.url);
 
     audioRef.current.onloadeddata = () => {
       if (audioRef.current !== null) {
         setDuration(audioRef.current.duration);
+        audioRef.current.volume = volume / 100;
       }
     };
   };
@@ -87,5 +96,7 @@ export default function useAudio(url?: string) {
     duration,
     volume,
     onChangeVolume,
+    isPlayingBeforeSwipe,
+    onChangeIsPlayingBeforeSwipe,
   };
 }

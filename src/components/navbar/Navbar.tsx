@@ -4,8 +4,7 @@ import styled from 'styled-components';
 import useAudio from './hooks/useAudio';
 import useFetchAudio from './hooks/useFetchAudio';
 
-import PlayerProgress from './PlayerProgress';
-import VolumeProgress from './VolumeProgress';
+import MusicProgress from './MusicProgress';
 
 const Container = styled.nav`
   position: fixed;
@@ -13,7 +12,7 @@ const Container = styled.nav`
   bottom: 0;
 
   width: 100%;
-  height: 40px;
+  height: 70px;
 
   background-color: #8b8b8b;
   color: white;
@@ -33,10 +32,14 @@ function Navbar() {
     progress,
     onChangeProgress,
     duration,
+    isPlayingBeforeSwipe,
+    onChangeIsPlayingBeforeSwipe,
   } = useAudio();
 
   const onChangeSelectedMusicToPrevious = () => {
-    const newMusicIndex = playList.findIndex((item) => item === selectedMusic);
+    const newMusicIndex = playList.findIndex(
+      (item) => item.id === selectedMusic?.id,
+    );
 
     if (newMusicIndex - 1 === -1) {
       return;
@@ -54,7 +57,9 @@ function Navbar() {
   };
 
   const onChangeSelectedMusicToNext = () => {
-    const newMusicIndex = playList.findIndex((item) => item === selectedMusic);
+    const newMusicIndex = playList.findIndex(
+      (item) => item.id === selectedMusic?.id,
+    );
 
     if (newMusicIndex + 1 === playList.length) {
       return;
@@ -81,16 +86,30 @@ function Navbar() {
 
   return (
     <Container>
-      <PlayerProgress
-        isPlaying={isPlaying}
-        duration={duration}
-        progress={progress}
-        onChangeProgress={onChangeProgress}
-        onPlay={onPlay}
-        onPause={onPause}
+      {/* music progress */}
+      <MusicProgress
+        width={700}
+        progress={(progress / duration || 0) * 10000}
+        progressMin={0}
+        progressMax={10000}
+        onChangeProgress={(event) =>
+          onChangeProgress((event.target.valueAsNumber / 10000) * duration)
+        }
+        onMouseDown={() => {
+          onChangeIsPlayingBeforeSwipe(isPlaying);
+          onPause();
+        }}
+        onMouseUp={isPlayingBeforeSwipe ? onPlay : undefined}
+      />
+      {/* volume progress */}
+      <MusicProgress
+        width={100}
+        progressMin={0}
+        progressMax={100}
+        progress={volume}
+        onChangeProgress={(event) => onChangeVolume(event.target.valueAsNumber)}
       />
       <br />
-      <VolumeProgress volume={volume} onChangeVolume={onChangeVolume} />
       <audio ref={audioRef} />
       <button onClick={onPlay}>play</button>
       <button onClick={onPause}>pause</button>
