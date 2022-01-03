@@ -33,7 +33,7 @@ function Navbar() {
     onChangeIsPlayingBeforeSwipe,
     onChangeSelectedMusicToNext,
     onChangeSelectedMusicToPrevious,
-  } = useAudio(playList);
+  } = useAudio(playList.data);
 
   return (
     <Container>
