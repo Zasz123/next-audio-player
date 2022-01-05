@@ -4,3 +4,7 @@ export interface IMusic {
   url: string;
   createdAt: Date | string;
 }
+
+export interface IGetPlayListResponseDTO {
+  playList: Array<IMusic>;
+}

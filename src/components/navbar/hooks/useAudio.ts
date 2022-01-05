@@ -1,27 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
-import useBoolean from 'lib/hooks/useBoolean';
+import musicSlice from 'modules/music/slice';
+import { musicApi } from 'services/musicApi';
+import { AppState } from 'modules/store';
+
 import useInterval from 'lib/hooks/useInterval';
 
-import { IMusic } from 'interfaces/music';
+export default function useAudio() {
+  const dispatch = useDispatch();
 
-export default function useAudio(playList: Array<IMusic>) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const [isPlaying, , setTrueIsPlaying, setFalseIsPlaying] = useBoolean();
-  const [isPlayingBeforeSwipe, onChangeIsPlayingBeforeSwipe] =
-    useBoolean(isPlaying);
-  const [selectedMusic, setSelectedMusic] = useState<IMusic | null>(null);
-  const [duration, setDuration] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(10);
+  const { data: playList = [] } = useSelector(
+    musicApi.endpoints.getPlayList.select(),
+  );
+  const { playingInfo, selectedMusicId } = useSelector(
+    (state: AppState) => state.music,
+  );
 
   const onChangeProgress = (value: number) => {
-    if (audioRef.current === null || value > duration) {
+    if (audioRef.current === null || value > playingInfo.duration) {
       return;
     }
 
-    setProgress(value);
+    dispatch(musicSlice.actions.setProgress(value));
     audioRef.current.currentTime = value;
   };
 
@@ -30,18 +32,28 @@ export default function useAudio(playList: Array<IMusic>) {
       return;
     }
 
-    setVolume(value);
+    dispatch(musicSlice.actions.setVolume(value));
     audioRef.current.volume = value / 100;
   };
 
-  const onChangeSelectedMusic = (newMusic: IMusic) => {
-    setSelectedMusic(newMusic);
+  const onChangeSelectedMusic = (newMusicId: number) => {
+    const newMusic = playList.find((item) => item.id === newMusicId);
+
+    if (!newMusic) {
+      return;
+    }
+
     audioRef.current = new Audio(newMusic.url);
 
     audioRef.current.onloadeddata = () => {
       if (audioRef.current !== null) {
-        setDuration(audioRef.current.duration);
-        audioRef.current.volume = volume / 100;
+        dispatch(
+          musicSlice.actions.setSelectedMusic({
+            id: newMusicId,
+            duration: audioRef.current.duration,
+          }),
+        );
+        audioRef.current.volume = playingInfo.volume / 100;
       }
     };
   };
@@ -51,7 +63,7 @@ export default function useAudio(playList: Array<IMusic>) {
       return;
     }
 
-    setTrueIsPlaying();
+    dispatch(musicSlice.actions.playMusic());
     audioRef.current.play();
   };
 
@@ -60,24 +72,32 @@ export default function useAudio(playList: Array<IMusic>) {
       return;
     }
 
-    setFalseIsPlaying();
+    dispatch(musicSlice.actions.pauseMusic());
     audioRef.current.pause();
   };
 
+  const onMouseDownMusicProgress = () => {
+    dispatch(musicSlice.actions.setIsPlayingBeforeSwipe(playingInfo.isPlaying));
+    onPause();
+  };
+
+  const onMouseUpMusicProgress = () =>
+    playingInfo.isPlayingBeforeSwipe ? onPlay() : undefined;
+
   const onChangeSelectedMusicToPrevious = () => {
     const newMusicIndex = playList.findIndex(
-      (item) => item.id === selectedMusic?.id,
+      (item) => item.id === selectedMusicId,
     );
 
     if (newMusicIndex - 1 === -1) {
       return;
     }
 
-    const isPlayingBeforeChange = isPlaying;
+    const isPlayingBeforeChange = playingInfo.isPlaying;
 
     onPause();
     onChangeProgress(0);
-    onChangeSelectedMusic(playList[newMusicIndex - 1]);
+    onChangeSelectedMusic(playList[newMusicIndex - 1].id);
 
     if (isPlayingBeforeChange) {
       onPlay();
@@ -86,18 +106,18 @@ export default function useAudio(playList: Array<IMusic>) {
 
   const onChangeSelectedMusicToNext = () => {
     const newMusicIndex = playList.findIndex(
-      (item) => item.id === selectedMusic?.id,
+      (item) => item.id === selectedMusicId,
     );
 
     if (newMusicIndex + 1 === playList.length) {
       return;
     }
 
-    const isPlayingBeforeChange = isPlaying;
+    const isPlayingBeforeChange = playingInfo.isPlaying;
 
     onPause();
     onChangeProgress(0);
-    onChangeSelectedMusic(playList[newMusicIndex + 1]);
+    onChangeSelectedMusic(playList[newMusicIndex + 1].id);
 
     if (isPlayingBeforeChange) {
       onPlay();
@@ -108,7 +128,7 @@ export default function useAudio(playList: Array<IMusic>) {
   // 나중에 곡 선택하면 onChangeSelectedMusic 호출되도록 수정
   useEffect(() => {
     if (playList.length > 0) {
-      onChangeSelectedMusic(playList[0]);
+      onChangeSelectedMusic(playList[0].id);
     }
   }, [playList]);
 
@@ -122,27 +142,21 @@ export default function useAudio(playList: Array<IMusic>) {
       if (audioRef.current.ended) {
         onPause();
       } else {
-        setProgress(audioRef.current.currentTime);
+        dispatch(musicSlice.actions.setProgress(audioRef.current.currentTime));
       }
     },
-    isPlaying && audioRef.current !== null ? 1000 : null,
+    playingInfo.isPlaying && audioRef.current !== null ? 1000 : null,
   );
 
   return {
     audioRef,
-    isPlaying,
     onPlay,
     onPause,
-    selectedMusic,
-    onChangeSelectedMusic,
-    progress,
     onChangeProgress,
-    duration,
-    volume,
     onChangeVolume,
-    isPlayingBeforeSwipe,
-    onChangeIsPlayingBeforeSwipe,
     onChangeSelectedMusicToPrevious,
     onChangeSelectedMusicToNext,
+    onMouseDownMusicProgress,
+    onMouseUpMusicProgress,
   };
 }

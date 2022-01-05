@@ -1,9 +1,12 @@
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { useGetPlayListQuery } from 'services/musicApi';
+
 import useAudio from './hooks/useAudio';
-import useFetchAudio from './hooks/useFetchAudio';
 
 import MusicProgress from './MusicProgress';
+import { AppState } from 'modules/store';
 
 const Container = styled.nav`
   position: fixed;
@@ -18,22 +21,22 @@ const Container = styled.nav`
 `;
 
 function Navbar() {
-  const [playList] = useFetchAudio();
+  useGetPlayListQuery();
+  const { duration, progress, volume } = useSelector(
+    (state: AppState) => state.music.playingInfo,
+  );
+
   const {
-    volume,
-    onChangeVolume,
-    isPlaying,
     audioRef,
     onPlay,
     onPause,
-    progress,
+    onChangeVolume,
     onChangeProgress,
-    duration,
-    isPlayingBeforeSwipe,
-    onChangeIsPlayingBeforeSwipe,
     onChangeSelectedMusicToNext,
     onChangeSelectedMusicToPrevious,
-  } = useAudio(playList.data);
+    onMouseDownMusicProgress,
+    onMouseUpMusicProgress,
+  } = useAudio();
 
   return (
     <Container>
@@ -46,11 +49,8 @@ function Navbar() {
         onChangeProgress={(event) =>
           onChangeProgress((event.target.valueAsNumber / 10000) * duration)
         }
-        onMouseDown={() => {
-          onChangeIsPlayingBeforeSwipe(isPlaying);
-          onPause();
-        }}
-        onMouseUp={isPlayingBeforeSwipe ? onPlay : undefined}
+        onMouseDown={onMouseDownMusicProgress}
+        onMouseUp={onMouseUpMusicProgress}
       />
       {/* volume progress */}
       <MusicProgress

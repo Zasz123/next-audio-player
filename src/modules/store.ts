@@ -1,25 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { createWrapper } from 'next-redux-wrapper';
-import { all } from 'redux-saga/effects';
-import createSagaMiddleware from 'redux-saga';
 
 import musicSlice from './music/slice';
-import musicSaga from './music/saga';
-
-const sagaMiddleware = createSagaMiddleware();
-
-function* rootSaga() {
-  yield all([musicSaga()]);
-}
+import baseApi from 'services/baseApi';
 
 const makeStore = () => {
   const store = configureStore({
-    reducer: { music: musicSlice.reducer },
+    reducer: {
+      music: musicSlice.reducer,
+      [baseApi.reducerPath]: baseApi.reducer,
+    },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(sagaMiddleware),
+      getDefaultMiddleware().concat(baseApi.middleware),
   });
-
-  sagaMiddleware.run(rootSaga);
 
   return store;
 };

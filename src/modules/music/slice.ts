@@ -1,15 +1,24 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { IMusic } from 'interfaces/music';
 
 interface IMusicState {
-  playList: { data: Array<IMusic>; loading: boolean; error: boolean };
+  selectedMusicId: number;
+  playingInfo: {
+    isPlaying: boolean;
+    duration: number;
+    progress: number;
+    volume: number;
+    isPlayingBeforeSwipe: boolean;
+  };
 }
 
 const initialState: IMusicState = {
-  playList: {
-    data: [],
-    loading: false,
-    error: false,
+  selectedMusicId: 0,
+  playingInfo: {
+    isPlaying: false,
+    duration: 0,
+    progress: 0,
+    volume: 0.5,
+    isPlayingBeforeSwipe: false,
   },
 };
 
@@ -17,19 +26,27 @@ const musicSlice = createSlice({
   name: 'music',
   initialState,
   reducers: {
-    setPlayListPending: (state) => {
-      state.playList = {
-        ...state.playList,
-        loading: true,
-      };
+    playMusic: (state) => {
+      state.playingInfo.isPlaying = true;
     },
-    setPlayListSuccess: (state, { payload }: PayloadAction<Array<IMusic>>) => {
-      state.playList.loading = false;
-      state.playList.data = payload;
+    pauseMusic: (state) => {
+      state.playingInfo.isPlaying = false;
     },
-    setPlayListFailure: (state) => {
-      state.playList.loading = false;
-      state.playList.error = true;
+    setIsPlayingBeforeSwipe: (state, { payload }: PayloadAction<boolean>) => {
+      state.playingInfo.isPlayingBeforeSwipe = payload;
+    },
+    setSelectedMusic: (
+      state,
+      { payload }: PayloadAction<{ id: number; duration: number }>,
+    ) => {
+      state.selectedMusicId = payload.id;
+      state.playingInfo.duration = payload.duration;
+    },
+    setProgress: (state, { payload }: PayloadAction<number>) => {
+      state.playingInfo.progress = payload;
+    },
+    setVolume: (state, { payload }: PayloadAction<number>) => {
+      state.playingInfo.volume = payload;
     },
   },
 });
